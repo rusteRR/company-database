@@ -18,8 +18,7 @@ where ('2023-01-10 15:00'::timestamp < rb.end_booking and rb.end_booking <= '202
    or ('2023-01-10 15:00'::timestamp <= rb.start_booking and rb.start_booking < '2023-01-10 16:00'::timestamp)
    or (rb.start_booking <= '2023-01-10 15:00'::timestamp and '2023-01-10 16:00'::timestamp <= rb.end_booking);
 
-
-----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 -- Посчитать по каждому офису кол-во человек в указанную дату (считаем, что офисы не работают по ночам)
 -- Ожидаемый результат:  office_name ,кол-во человек
@@ -40,8 +39,26 @@ group by office_code, pass_id;
 -- Ожидаемый результат: id сотрудника, зарплата, дата начала, дата конца
 --                      отсортировано по id-сотрудника, внутри по дате начала должности
 -- (есть проблема, что если сотрудник уволился, потом вернулся на ту же должность и зп, то период увольнения будет посчитан, как период получения зп)
+-- табличка скорее техническая и сама по себе не сильно много информации содержит, но по ней можно чего нить интересного достать (возможно имеет смысл пихнуть во вью)
 
 select employee_id, position_id, salary, min(valid_from) as start_date, max(valid_to) as end_date
 from employee_versions
 group by employee_id, salary, position_id
 order by employee_id, start_date;
+
+----------------------------------------------------------------------------------------
+
+-- Найти топ-3 сотрудников по зарплате (текущей) на каждой должности
+-- Ожидаемый результат:
+--                      для каждой должности: id сотрудника, имя, фамилия, зп, ранк
+
+select *
+from (select e.position_id,
+             e.employee_id,
+             e.first_name,
+             e.second_name,
+             e.salary,
+             rank() over (partition by e.position_id order by e.salary desc) as rank
+      from employee e
+               inner join position p on e.position_id = p.position_id) r
+where rank < 4
