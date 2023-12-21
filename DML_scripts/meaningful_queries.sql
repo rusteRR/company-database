@@ -53,7 +53,7 @@ order by employee_id, start_date;
 --                      для каждой должности: id сотрудника, имя, фамилия, зп, ранк
 
 select *
-from (select e.position_id,
+from (select p.name,
              e.employee_id,
              e.first_name,
              e.second_name,
@@ -62,3 +62,4 @@ from (select e.position_id,
       from employee e
                inner join position p on e.position_id = p.position_id) r
 where rank < 4
+order by name, rank
