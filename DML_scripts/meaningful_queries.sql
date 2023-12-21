@@ -24,12 +24,24 @@ where ('2023-01-10 15:00'::timestamp < rb.end_booking and rb.end_booking <= '202
 -- Посчитать по каждому офису кол-во человек в указанную дату (считаем, что офисы не работают по ночам)
 -- Ожидаемый результат:  office_name ,кол-во человек
 
-select office_code, coalesce(count(distinct date), 0)
+select ocpi.office_code, coalesce(count(distinct ocpi.time), 0)
 from (select o.office_code,
              et.pass_id,
              case
                  when et.time::date = '2023-01-10'::date then et.time::date
-                 end as date
+                 end as time
       from entrance_time et
                right join office o on et.office_code = o.office_code) as ocpi
-group by office_code, pass_id
+group by office_code, pass_id;
+
+----------------------------------------------------------------------------------------
+
+-- Получить историю изменений зарплаты сотрудников
+-- Ожидаемый результат: id сотрудника, зарплата, дата начала, дата конца
+--                      отсортировано по id-сотрудника, внутри по дате начала должности
+-- (есть проблема, что если сотрудник уволился, потом вернулся на ту же должность и зп, то период увольнения будет посчитан, как период получения зп)
+
+select employee_id, position_id, salary, min(valid_from) as start_date, max(valid_to) as end_date
+from employee_versions
+group by employee_id, salary, position_id
+order by employee_id, start_date;
