@@ -25,7 +25,7 @@ create table if not exists employee (
     first_name   text,
     second_name  text,
     birth_date   date,
-    phone_number text check(regexp_match(phone_number, '^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$') notnull),
+    phone_number text check(regexp_match(phone_number, '^[+]?[0-9]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$') notnull),
     salary       int check (salary > 0),
     load         int check (load between 0 and 40),
     is_active    bool
@@ -37,7 +37,7 @@ create table if not exists employee_versions (
     first_name   text,
     second_name  text,
     birth_date   date,
-    phone_number text check(regexp_match(phone_number, '^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$') notnull),
+    phone_number text check(regexp_match(phone_number, '^[+]?[0-9]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$') notnull),
     salary       int check (salary > 0),
     load         int check (load between 0 and 40),
     valid_from   timestamp,
