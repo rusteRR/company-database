@@ -2,6 +2,64 @@ create schema if not exists views;
 
 set search_path = views, public;
 
+create or replace view v_position as
+    select *
+    from position;
+
+create or replace view v_office
+    select o.office_code,
+           o.name,
+           o.city
+    from office o
+    where o.city = 'Moscow'
+
+create or replace view v_meeting as
+    select m.room_id,
+           m.name,
+           o.name
+    from meeting_room m
+    left join office o
+        on m.office_cide = o.office_code;  
+
+create or replace view v_employee as
+    select e.employee_id,
+           '***' as first_name,
+           '***' as second_name,
+           p.name
+    from employee e
+    left join position p
+        on e.position_id = p.position_id;
+
+create or replace view v_pass as 
+    select p.pass_id,
+           e.employee.first_name, 
+           p.is_valid
+    from pass p
+    left join employee e
+        on p.employee_id = e.employee_id;
+
+create or replace view v_booking as 
+    select r.room_id,
+           e.employee.employee_id, 
+           r.booking_date
+    from room_booking r
+    where date(r.booking_date) > "2023-12-20"
+    left join employee e
+        on r.employee_id = e.employee_id;
+
+create or replace view v_entrance as 
+    select entr.pass_id
+    from entrance_time entr
+    where is_entrance IS TRUE 
+
+create or replace view v_versions as 
+    select ver.employee_id,
+           ver.position_id, 
+           ver.salary
+    from employee_versions ver
+    where ver.salary > 100000
+
+
 -- Статистика по каждой переговорке за день:
 -- количество проведённых в ней встреч
 -- суммарное количество часов за день, которое переговорка была занята
