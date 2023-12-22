@@ -1,19 +1,31 @@
 set search_path = company_database, public;
 
-CREATE OR REPLACE FUNCTION after_insert_employee()
+CREATE OR REPLACE FUNCTION prevent_concurrent_booking()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO company_database.employee_versions (
-        employee_id, position_id, first_name, second_name, birth_date,
-        phone_number, salary, load, valid_from, valid_to
-    ) VALUES (
-        NEW.employee_id, NEW.position_id, NEW.first_name, NEW.second_name, NEW.birth_date,
-        NEW.phone_number, NEW.salary, NEW.load, CURRENT_TIMESTAMP, '9999-01-01'
-    );
-
+    IF EXISTS (
+        SELECT 1
+        FROM company_database.room_booking rb
+        WHERE rb.room_id = NEW.room_id
+          AND rb.booking_date = NEW.booking_date
+          AND (
+            (NEW.start_booking BETWEEN rb.start_booking AND rb.end_booking)
+            OR (NEW.end_booking BETWEEN rb.start_booking AND rb.end_booking)
+            OR (NEW.start_booking <= rb.start_booking AND NEW.end_booking >= rb.end_booking)
+          )
+    ) THEN
+        RAISE EXCEPTION 'Concurrent booking is not allowed for room % and date %',
+            NEW.room_id, NEW.booking_date;
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_concurrent_booking_trigger
+BEFORE INSERT OR UPDATE
+ON company_database.room_booking
+FOR EACH ROW
+EXECUTE FUNCTION prevent_concurrent_booking();
 
 CREATE TRIGGER after_insert_employee_trigger
 AFTER INSERT ON company_database.employee
