@@ -23,10 +23,16 @@ where ('2023-12-21 13:00'::timestamp < rb.end_booking and rb.end_booking <= '202
 -- Посчитать по каждому офису кол-во человек в указанную дату (считаем, что офисы не работают по ночам)
 -- Ожидаемый результат:  office_name ,кол-во человек
 
-select o.office_code, coalesce(count(distinct et.pass_id), 0) as total_employees
-from entrance_time et
-         right join office o on et.office_code = o.office_code
+select o.office_code, coalesce(count(distinct ocpi.pass_id), 0) as total_employees
+from (select distinct on(et.pass_id) o.office_code,
+             et.pass_id
+      from entrance_time et
+               right join office o on et.office_code = o.office_code
+      where et.time::date = '2023-01-12'::date
+      group by o.office_code, et.pass_id, et.time) ocpi right join office o on ocpi.office_code = o.office_code
 group by o.office_code;
+
+-- ;
 
 ----------------------------------------------------------------------------------------
 
@@ -76,12 +82,11 @@ order by employee_id;
 
 select mr.name
 from employee e
-         inner join company_database.room_booking rb
-                    on e.employee_id = rb.employee_id
-         inner join company_database.meeting_room mr
-                    on mr.room_id = rb.room_id
-where e.employee_id = 2
-  and rb.start_booking >= now()::timestamp;
+    inner join company_database.room_booking rb
+        on e.employee_id = rb.employee_id
+    inner join company_database.meeting_room mr
+        on mr.room_id = rb.room_id
+where e.employee_id = 2 and rb.start_booking >= now()::timestamp;
 
 ----------------------------------------------------------------------------------------
 
@@ -95,7 +100,7 @@ select employee_id,
        position_id,
        salary,
        min(valid_from) as start_date,
-       max(valid_to)   as end_date
+       max(valid_to) as end_date
 from employee_versions
 group by employee_id, salary, position_id
 order by employee_id, start_date;
