@@ -23,15 +23,16 @@ where ('2023-12-21 13:00'::timestamp < rb.end_booking and rb.end_booking <= '202
 -- Посчитать по каждому офису кол-во человек в указанную дату (считаем, что офисы не работают по ночам)
 -- Ожидаемый результат:  office_name ,кол-во человек
 
-select ocpi.office_code, coalesce(count(distinct ocpi.time), 0) as total_employees
-from (select o.office_code,
-             et.pass_id,
-             case
-                 when et.time::date = '2023-01-10'::date then et.time::date
-                 end as time
+select o.office_code, coalesce(count(distinct ocpi.pass_id), 0) as total_employees
+from (select distinct on(et.pass_id) o.office_code,
+             et.pass_id
       from entrance_time et
-               right join office o on et.office_code = o.office_code) as ocpi
-group by office_code, pass_id;
+               right join office o on et.office_code = o.office_code
+      where et.time::date = '2023-01-12'::date
+      group by o.office_code, et.pass_id, et.time) ocpi right join office o on ocpi.office_code = o.office_code
+group by o.office_code;
+
+-- ;
 
 ----------------------------------------------------------------------------------------
 
