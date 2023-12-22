@@ -1,8 +1,9 @@
 set search_path = company_database, public;
 
-select employee_id, first_name, second_name, salary * (load::numeric(2) / 40)
+select employee_id, first_name, second_name, salary * (load::numeric(2) / 40) as salary
 from employee
-where salary * (load::numeric(2) / 40) > 100000;
+where salary * (load::numeric(2) / 40) > 100000
+order by salary;
 
 select position_id, avg(salary) as average_salary
 from employee
